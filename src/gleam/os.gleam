@@ -8,13 +8,11 @@ pub fn get_env(key: String) -> Result(String, Nil) {
 /// Sets an environment variable.
 pub fn insert_env(key: String, value: String) -> Nil {
   do_insert_env(key, value)
-  Nil
 }
 
 /// Deletes an environment variable.
 pub fn delete_env(key: String) -> Nil {
   do_delete_env(key)
-  Nil
 }
 
 if erlang {
