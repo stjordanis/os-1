@@ -1,5 +1,22 @@
 //// Function to interact with the host operating system.
 
+/// Gets an environment variable.
+pub fn get_env(key: String) -> Result(String, Nil) {
+  do_get_env(key)
+}
+
+/// Sets an environment variable.
+pub fn insert_env(key: String, value: String) -> Nil {
+  do_insert_env(key, value)
+  Nil
+}
+
+/// Deletes an environment variable.
+pub fn delete_env(key: String) -> Nil {
+  do_delete_env(key)
+  Nil
+}
+
 if erlang {
   import gleam/list
   import gleam/map.{Map}
@@ -8,7 +25,10 @@ if erlang {
   // Internal type for erlang interop.
   external type CharList
 
-  external fn os_getenv() -> List(CharList) =
+  external fn os_getenv_all() -> List(CharList) =
+    "os" "getenv"
+
+  external fn os_getenv(String) -> List(CharList) =
     "os" "getenv"
 
   external fn os_putenv(key: CharList, value: CharList) -> Bool =
@@ -23,8 +43,9 @@ if erlang {
   external fn string_to_char_list(String) -> CharList =
     "unicode" "characters_to_list"
 
+  // TODO: JavaScript version once JavaScript has Map support
   /// Returns all environment variables set on the system.
-  pub fn get_env() -> Map(String, String) {
+  pub fn get_all_env() -> Map(String, String) {
     list.map(
       os_getenv(),
       fn(char_list) {
@@ -36,15 +57,22 @@ if erlang {
     |> map.from_list()
   }
 
-  /// Sets an environment variable.
-  pub fn insert_env(key: String, value: String) -> Nil {
+  fn do_insert_env(key: String, value: String) {
     os_putenv(string_to_char_list(key), string_to_char_list(value))
-    Nil
   }
 
-  /// Deletes an environment variable.
-  pub fn delete_env(key: String) -> Nil {
+  fn do_delete_env(key: String) {
     os_unsetenv(string_to_char_list(key))
-    Nil
   }
+}
+
+if javascript {
+  external fn do_insert_env(String, String) -> Nil =
+    "../gleam_os.js" "insert_env"
+
+  external fn do_delete_env(String) -> Nil =
+    "../gleam_os.js" "delete_env"
+
+  external fn do_get_env(String) -> Result(String, Nil) =
+    "../gleam_os.js" "get_env"
 }
